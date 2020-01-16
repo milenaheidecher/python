@@ -1,10 +1,3 @@
-# MILENA HEIDECHER DE OLIVEIRA
-# NUMERO USP 9020541
-# Janeiro de 2020
-##################################
-# EP 1 MAP5725
-##################################
-
 import math
 import numpy as np
 import matplotlib.pyplot as plt
