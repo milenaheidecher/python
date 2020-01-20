@@ -1,0 +1,201 @@
+# MILENA HEIDECHER DE OLIVEIRA
+# NUMERO USP 9020541
+# Janeiro de 2020
+##################################
+# TAREFA 2 MAP5725
+##################################
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+###################################
+# LENDO A OPÇÃO ESCOLHIDA PELO USUÁRIO
+###################################
+escolha = input("Digite o número do método a ser utilizado\n 1: Euler explícito\n 2: Euler implícito \n 3: Trapézios \n 4: Taylor de ordem 2\n")
+#inicio = time.time()    #marca o tempo inicial 
+###################################
+# definindo a função dos métodos
+###################################
+
+if escolha == "1":
+    def phi(t,y,h,f, tplusone):
+    # define discretization function     (EULER explícito)
+        k1 = f(t, y)
+        
+        return k1     # end: Euler explícito
+
+elif escolha == "2":
+    def phi(t,y,h,f, tplusone):
+    # define discretization function     (EULER implícito)
+        # chute inicial
+        ytil = y + h*f(t, y)
+        alteracao = 1.0
+            # iteracoes de pto fixo
+        r = 0
+        while r<20 and alteracao > 0.0001:
+            ytil_0 = ytil
+            ytil = y + h*f(tplusone, ytil)
+            alteracao = np.linalg.norm(ytil-ytil_0)
+            r = r + 1
+         #       print (r, ytil, alteracao )
+       # y[i+1] = k1
+        return f(tplusone, ytil)     # end: Euler implícito
+    
+elif escolha == "3":
+    def phi(t,y,h,f, tplusone):
+    # define discretization function     (TRAPEZIOS)
+        # chute inicial
+        ytil = y + h*f(t, y)
+        alteracao = 1.0
+            # iteracoes de pto fixo
+        r = 0
+        while r<20 and alteracao > 0.0001:
+            ytil_0 = ytil
+            ytil = y + (h/2)*(f(t,y)+f(tplusone, ytil))
+            alteracao = np.linalg.norm(ytil-ytil_0)
+            r = r + 1
+         #       print (r, ytil, alteracao )
+       # y[i+1] = k1
+        return (f(t,y)+f(tplusone, ytil) )/2    # end: trapezios
+
+elif escolha == "4":
+    def phi(t,y,h,f):
+    # define discretization function   (NYSTROM)
+        k1 = f(t, y)
+        k2 = f(t+(2/3)*h, y + (2/3)*h*k1)
+        k3 = f(t+(2/3)*h, y + (2/3)*h*k2)
+        return 1/4*(k1 + (3/2)*(k2 + k3))     # end: Nystrom
+        
+###################################
+# parametros iniciais
+###################################
+
+t0 = 0.0                    # instante inicial
+tf = 5.0                    # instante final
+n_lista = [40, 80, 160]     # qtd de ptos a cada execucao
+y0 = np.array([math.exp(1),0])     # y0 tq y(t0)=y0
+
+def f(t,y):                 # f tq dy/dt = f(y,t)
+
+    return np.array( [ -y[1] -y[0]/(t+1)**2, 
+                      y[0] - y[1]/(t+1)**2 ] )
+
+
+def solucao(t):             # expressao analitica para y(t)
+
+    return math.exp(1/(1+t)) * np.array( [math.cos(t), math.sin(t)] )
+
+    
+    
+###################################
+# executar o metodo algumas vezes
+# e fazer os graficos
+###################################
+
+def main ():
+    
+    h_lista = []
+    t_lista = []
+    y_lista = []
+    erro_lista = []
+        
+    for n in n_lista:
+        
+        h = (tf-t0)/float(n)
+
+        # executa o metodo
+
+        y = np.zeros([n+1, 2])
+        t = np.zeros(n+1)
+        
+        t[0] = t0
+        y[0] = y0
+        
+        for i in range(0,n):
+            t[i+1] = t0 + (i+1)*h
+           # print(t[i+1], i+1)
+            y[i+1] = y[i] + h*phi(t[i],y[i],h,f, t[i+1])
+        
+        # adiciona nos dados para o grafico e a tabela
+        
+        t_lista.append(t)
+        y_lista.append(y)
+        h_lista.append(h)
+        erro_lista.append( np.linalg.norm(y[n] - solucao(tf)) )
+    
+    
+    # exibe o grafico com as curvas de y[0]
+    
+    for w in range(len(n_lista)):
+        t = t_lista[w]
+        y = y_lista[w]
+        
+        plt.plot(t, y[:,0], label="n=%d"%n_lista[w], color = 'black', linestyle=(0,(w+1,2,w,3)), linewidth =1)
+    truevalue=list(solucao(x) for x in t)
+    plt.title('aprox para a 1a e 2a coordenada')
+    plt.xlabel('t[i]')
+    plt.ylabel('y[0] (preto) e y[1] (cinza)')
+    plt.grid(True)
+    plt.plot(t, truevalue, color = 'black', label = "sol exata", linewidth =0.8)
+    plt.legend()
+    
+    # exibe o grafico com as curvas de y[1]
+    
+    for w in range(len(n_lista)):
+        t = t_lista[w]
+        y = y_lista[w]
+        
+        plt.plot(t, y[:,1], color = 'gray', linestyle=(0,(w+1,2,w,3)), linewidth =1)
+    #plt.title('aprox para a 2a coordenada')
+   # plt.xlabel('t[i]')
+   # plt.ylabel('y[1][i]')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+    
+    # faz a curva em 2d
+    
+    for w in range(len(n_lista)):
+        y = y_lista[w]
+        
+        plt.plot(y[:,0], y[:,1], label="n=%d"%n_lista[w], color = 'black', linestyle=(0,(w+1,2,w,3)), linewidth =1)
+
+    plt.title('aprox para a curva em 2d')
+    plt.xlabel('y[0][i]')
+    plt.ylabel('y[1][i]')
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+    
+    
+    # exibe o grafico com o erro
+    
+    plt.title('decaimento do erro no instante final')
+    plt.xlabel('h')
+    plt.ylabel('erro(h, %1.2f)'%tf)
+    plt.grid(True)
+    plt.plot(h_lista,erro_lista, color = 'black')
+    plt.show()
+    
+    # escreve a tabela
+    
+   # escreve a tabela
+    print(len(n_lista))
+    print()
+    print("n", "h", "erro(h, %1.2f)"%tf, "razão entre erros", sep='\t\t')
+    for w in range(len(n_lista)):
+        r=0
+        if w > 0:
+            r = abs(erro_lista[w-1])/abs(erro_lista[w])
+            
+        print("%5d %24.8e %24.16e %12.5e " % (n_lista[w], h_lista[w], erro_lista[w], r))
+    
+    
+
+
+###################################
+# executar
+###################################
+
+main()
