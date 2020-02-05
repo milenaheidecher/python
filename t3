@@ -1,0 +1,298 @@
+# MILENA HEIDECHER DE OLIVEIRA
+# NUMERO USP 9020541
+# Fevereiro de 2020
+##################################
+# TAREFA 3 MAP5725
+##################################
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+#import time #necessário para calcular o tempo de execução
+
+###################################
+# LENDO A OPÇÃO ESCOLHIDA PELO USUÁRIO
+###################################
+escolha = input("Digite o número do método a ser utilizado\n 1: Runge Kutta 3 ordem \n 2: Runge Kutta 4 ordem \n 3: Controle automático de passos (RK33 e RK44) \n 4: RK - Fehlberg \n ")
+#inicio = time.time()    #marca o tempo inicial 
+
+###################################
+# definindo a função dos métodos
+###################################
+
+if escolha == "1":
+    def phi(t,y,h,f, r, K):
+    # define discretization function   (RUNGE KUTTA 3 ORDEM)
+        k1 = f(t, y, r, K)
+        k2 = f(t+h/2, y + h/2*k1, r, K)
+        k3 = f(t+h, y -h*k1 +2*h*k2, r, K)
+        return (1/6)*(k1 + 4*k2 + k3)     # end: RK33
+##################################################
+    
+##################################################    
+elif escolha == "2":
+    def phi(t,y,h,f, r, K):
+    # define discretization function   (RUNGE KUTTA 4 ordem)
+        k1 = f(t, y, r, K)
+        k2 = f(t+h/2, y + h/2*k1, r, K)
+        k3d = f(t+h/2, y + h/2*k2, r, K)
+        k4 = f(t+h, y + h*k3d, r, K)    
+        return (1/6)*(k1 + 2*k2 + 2*k3d + k4)     # end: RK44
+###################################################
+
+###################################################   
+elif escolha == "3": # inicio: controle automatico de passos
+    def funcaoerro (t,y,h,f,r,K):
+        k1 = f(t, y, r, K)
+        k2 = f(t+h/2, y + h/2*k1, r, K)
+        k3 = f(t+h, y -h*k1 +2*h*k2, r, K)
+        k3d = f(t+h/2, y + h/2*k2, r, K)
+        k4 = f(t+h, y + h*k3d, r, K)
+        return - k2/3 - k3/6 + k3d/3 + k4/6
+    
+    def phi(t,y,h,f, r, K):
+    # define discretization function   (RUNGE KUTTA 3 ORDEM)
+        k1 = f(t, y, r, K)
+        k2 = f(t+h/2, y + h/2*k1, r, K)
+        k3 = f(t+h, y -h*k1 +2*h*k2, r, K)
+        return (1/6)*(k1 + 4*k2 + k3)     # end: RK33
+    
+    def f(t,y,r,K):                 # f tq dy/dt = f(y,t)
+        return r*(1-(y/K))*y
+    
+    def solucao(t,yzero, r, K):             # expressao analitica para y(t)
+        return (yzero*K)/(yzero+(K-yzero)*math.exp(-r*t))
+    
+    def main():
+        limit = 7.5
+        t_final = 20
+        t = [0]
+        y = [1] #cond inicial
+        k = 0
+        b = 0.1
+        yzero = 1 # usada para calcular a solução exata
+        h = 0.5
+        K = 10**5
+        r = 2
+        h_lista = []
+        #bloco que altera os valores de h conforme o tempo avanca 
+        while t[k] < t_final:
+            alfa_RK33 = funcaoerro(t[k],y[k], h, f, r, K)
+            while abs(alfa_RK33) > limit:
+                h = h * b
+                alfa_RK33 = funcaoerro(t[k],y[k], h, f, r, K)
+                
+            y.append(y[k] + h * phi(t[k],y[k],h,f,r,K))
+            t.append(t[k] + h)
+            h_lista.append(h)
+            k = k + 1
+            if alfa_RK33 == 0:
+                alfa_RK33 = funcaoerro(t[k],y[k], h, f, r, K)
+
+            h = h * (limit/abs(alfa_RK33))**(1/3)
+
+            if h <= 0.02:
+                h = h * 0.02
+            elif h >= 3:
+                h = h * 3
+            else:
+                h = h * 2
+ 
+        sol_exata = []
+        erro = []
+        for i in range(len(t)):
+            sol_exata.append(solucao(t[i],yzero,r, K))
+            erro.append(abs(y[i]-sol_exata[i]))
+
+        plt.title("Controle automático de passos usando RK33 e RK44")
+        plt.plot(t, sol_exata, label='Solução exata', color='black')
+        plt.plot(t, y,'x', label='aproximação',  color='black')
+        plt.grid(True)
+        plt.xlabel("tempo t")
+        plt.ylabel("y(t)")
+        plt.legend()
+        plt.show()
+        for i in range(len(h_lista)):
+            if erro[i] == max(erro):
+                print("    h", "               erro maximo", "quantidade de passos")
+                print(h_lista[i], erro[i], len(h_lista))
+    main() # fim controle automatico de passos
+###############################################
+
+###############################################
+elif escolha == "4":  #inicio RK - Fehlberg (algoritmo do Burden)
+    t=0
+    taux = 0 # para a solução exata
+    b=20
+    wzero = 1
+    tol = 1000   #tolerancia
+    hmax = 0.55
+    hmin = 0.0001
+    r=2  
+    K = 10**5
+    t_lista = []
+    h_lista = []
+    erro_lista = []
+    sol_exata = []
+    w_lista = []
+    h=hmax
+    w=wzero
+    flag = 1
+    t_solexata = []
+    # calcula valores de t para a solução exata ficar precisa
+    while taux<b:
+        t_solexata.append(taux+0.4)
+        taux = taux + 0.4
+        
+    def f(t,y,r,K):                 # f tq dy/dt = f(y,t)
+        return r*(1-(y/K))*y
+    
+    def solucao(t,yzero, r, K):             # expressao analitica para y(t)
+        return (yzero*K)/(yzero+(K-yzero)*math.exp(-r*t))
+    
+    #bloco que calcula os kappas
+    while flag == 1:
+        k1 = h * f(t, w, r, K)
+        k2 = h * f(t + (1 / 4) * h, w + (1 / 4) * k1, r, K)
+        k3 = h * f(t + (3 / 8) * h, w + (3 / 32) * k1 + (9 / 32) * k2, r, K)
+        k4 = h * f(t + (12 / 13) * h, w + (1932 / 2197) * k1 - (7200 / 2197) * k2 + (7296 / 2197) * k3, r, K)
+        k5 = h * f(t + h, w + (439 / 216) * k1 - 8 * k2 + (3680 / 513) * k3 - (845 / 4104) * k4, r, K)
+        k6 = h * f(t + (1 / 2) * h, w - (8 / 27) * k1 + 2 * k2 - (3544 / 2565) * k3 + (1859 / 4104) * k4 - (11 / 40) * k5, r, K)
+        #erro calculado atraves dos kappas
+        dif = (1/h)*abs((1/360)*k1-(128/4275)*k3-(2197/75240)*k4+(1/50)*k5+(2/55)*k6)
+        erro_lista.append(dif) 
+        # bloco que altera os valores de h conforme as condicoes
+        if dif <= tol:
+            t=t+h
+            w=w+(25/216)*k1+(1408/2565)*k3+(2197/4104)*k4-(1/5)*k5
+        delta = 0.84*(tol/dif)**(1/4)  
+        if delta <= 0.1:
+            h=0.1*h
+            
+        elif delta >= 3:
+            h=3*h
+            
+        else: h=delta*h
+        
+        if h>hmax:
+            h=hmax
+            
+        if t>=b:
+            flag = 0
+            
+        elif (t+h)>b:
+            h=b-t
+            
+        elif h<hmin:
+            flag = 0
+            print('h minimo foi excedido')
+
+        t_lista.append(t)  
+        h_lista.append(h)
+        w_lista.append(w)
+    sol_exata = list(solucao(x,wzero, r, K) for x in t_solexata)
+        
+    plt.title("Aproximação RK - Felhberg")
+    plt.plot(t_solexata,sol_exata, label = 'Solução exata', color = 'black')    
+    plt.plot(t_lista, w_lista, 'x', label = 'Solução aproximada', color = 'black')  
+    plt.legend()
+    plt.xlabel('tempo t')
+    plt.ylabel('y(t)')
+    plt.grid(True)
+    plt.show()     
+
+    # printa a tabela
+    for i in range(len(h_lista)):
+        if erro_lista[i] == max(erro_lista):
+            print("        h", "            erro máximo", "quantidade de passos")
+            print(h_lista[i], erro_lista[i], len(h_lista))          #fim RK - Fehlberg    
+##################################################    
+
+t0 = 0.0                    # instante inicial
+tf = 20.0 
+                   # instante final
+if escolha =="2": n_lista = [40]  # qtd de ptos a cada execucao para m=1,2,3,...,6
+else: n_lista = [80]
+
+y0 = np.array([1])     # y0 tq y(t0)=y0
+
+def f(t,y,r,K):                 # f tq dy/dt = f(y,t)
+    return np.array( [r*(1-(y/K))*y] )
+
+def solucao(t,yzero, r, K):             # expressao analitica para y(t)
+    return (yzero*K)/(yzero+(K-yzero)*math.exp(-r*t))
+
+###################################
+# executar o metodo algumas vezes
+# e fazer os graficos
+###################################
+if escolha != "4" and escolha !="3":
+    def main ():
+    # inicialização de cada lista
+        h_lista = []
+        t_lista = []
+        y_lista = []
+        erro_lista = []
+        r=2
+        K = 10**5
+        yzero=1
+        for n in n_lista:
+        
+            h = (tf-t0)/float(n)  
+
+        # executa o metodo
+
+            y = np.zeros([n+1])
+            t = np.zeros(n+1)
+            erro = np.zeros(n+1)
+        
+            t[0] = t0
+            y[0] = y0
+        
+            for i in range(0,n):
+                t[i+1] = t0 + (i+1)*h                  
+                y[i+1] = y[i] + h*phi(t[i],y[i],h,f, r, K)
+                # adiciona nos dados para o grafico e a tabela
+            t_lista.append(t)
+
+            for k in range(0,n+1):
+                erro[k] = abs(y[k]-solucao(t[k],yzero,r,K))
+                
+            erro_lista.append(np.max(erro))        
+            y_lista.append(y)
+            h_lista.append(h)
+    # exibe o grafico com as curvas de y
+        for w in range(len(n_lista)):
+            t = t_lista[w]
+            y = y_lista[w]
+        
+            plt.plot(t, y,'x', label="solução aproximada", color = 'black', linewidth =0.7)
+    
+        truevalue=list(solucao(x,yzero,r, K) for x in t)
+        if escolha == "1": plt.title('aprox da função com método de passo simples RK33')
+        else: plt.title('aprox da função com método de passo simples RK44')
+        plt.xlabel('t[i]')
+        plt.ylabel('y[i]')
+        plt.grid(True)
+        # plota a solução exata
+        plt.plot(t, truevalue, color = 'black', label = "sol exata")
+        plt.legend()
+        plt.show()
+    
+        # escreve a tabela
+        print()
+        print("h", "        erro máximo", "quantidade de passos")
+        for w in range(len(n_lista)):
+            r=0
+            if w > 0:
+                r = abs(erro_lista[w-1])/abs(erro_lista[w])
+            
+            print(h_lista[w], erro_lista[w], n)
+
+###################################
+# executar
+###################################
+
+    main()
+#fim = time.time()  #marca o tempo final
+#print(fim - inicio)  #mostra o tempo final
