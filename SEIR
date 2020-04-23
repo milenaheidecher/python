@@ -1,0 +1,15 @@
+def seir_com_dist_social(valores_iniciais, N, params, t):
+    S_0, E_0, I_0, R_0 = valores_iniciais
+    S, E, I, R = [S_0], [E_0], [I_0], [R_0]
+    beta, rho, gamma, nu = params
+    dt = t[1] - t[0]
+    for _ in t[1:]:
+        prox_S = S[-1] - (beta*(S[-1]/N)*((rho*E[-1]) + I[-1]))*dt
+        prox_E = E[-1] + ((beta*(S[-1]/N)*((rho*E[-1]) + I[-1])) - gamma*E[-1])*dt
+        prox_I = I[-1] + (gamma*E[-1] - nu*I[-1])*dt
+        prox_R = R[-1] + (nu*I[-1])*dt
+        S.append(prox_S)
+        E.append(prox_E)
+        I.append(prox_I)
+        R.append(prox_R)
+    return np.stack([S, E, I, R]).T
