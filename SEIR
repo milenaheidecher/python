@@ -1,4 +1,19 @@
-def seir_com_dist_social(valores_iniciais, N, params, t):
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+N = input("Digite o número total da população a ser estudada: ")
+I =  input("Digite o número de Infectados: ")
+beta = input("Digite a taxa de contato média da população: ")
+rho = input("Digite o valor de Rho: ")
+periodo_incub = input("Digite o tempo de incubação: ")
+gamma = 1/periodo_incub
+p_infec = input("Digite o período infeccioso médio: ")
+nu = 1/p_infec
+
+params = beta, rho, gamma, nu
+
+def seir(valores_iniciais, N, params, t):
     S_0, E_0, I_0, R_0 = valores_iniciais
     S, E, I, R = [S_0], [E_0], [I_0], [R_0]
     beta, rho, gamma, nu = params
