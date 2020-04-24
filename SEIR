@@ -2,17 +2,6 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-N = input("Digite o número total da população a ser estudada: ")
-I =  input("Digite o número de Infectados: ")
-beta = input("Digite a taxa de contato média da população: ")
-rho = input("Digite o valor de Rho: ")
-periodo_incub = input("Digite o tempo de incubação: ")
-gamma = 1/periodo_incub
-p_infec = input("Digite o período infeccioso médio: ")
-nu = 1/p_infec
-
-params = beta, rho, gamma, nu
-
 def seir(valores_iniciais, N, params, t):
     S_0, E_0, I_0, R_0 = valores_iniciais
     S, E, I, R = [S_0], [E_0], [I_0], [R_0]
@@ -28,3 +17,26 @@ def seir(valores_iniciais, N, params, t):
         I.append(prox_I)
         R.append(prox_R)
     return np.stack([S, E, I, R]).T
+    
+def main():
+    t_max = int(input("Digite o tempo a ser estudado: "))
+    N = int(input("Digite o número total da população a ser estudada: "))
+    I = int(input("Digite o número de Infectados: "))
+    S = int(input("Digite o número de Suscetiveis: "))
+    E = int(input("Digite o número de Expostos: "))
+    R = int(input("Digite o número de Removidos: "))
+    beta = float(input("Digite a taxa de contato média da população: "))
+    rho = float(input("Digite o valor de Rho: "))
+    periodo_incub = int(input("Digite o tempo de incubação: "))
+    p_infec = int(input("Digite o período infeccioso médio: "))
+    gamma = 1/periodo_incub
+    nu = 1/p_infec
+    params = beta, rho, gamma, nu
+    dt = .1
+    t = np.linspace(0, t_max, int(t_max/dt) + 1)
+    valores_iniciais = S, E, I, R
+    resultados = seir(valores_iniciais, N, params, t)
+main()    
+
+
+
