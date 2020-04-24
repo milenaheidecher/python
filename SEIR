@@ -36,6 +36,8 @@ def main():
     t = np.linspace(0, t_max, int(t_max/dt) + 1)
     valores_iniciais = S, E, I, R
     resultados = seir(valores_iniciais, N, params, t)
+    print("Suscetiveis", "Expostos", "Infectados", "Removidos")
+    print(resultados)
 main()    
 
 
